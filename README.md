@@ -8,14 +8,14 @@ PhenoDAE is built with Python 3 and PyTorch. All necessary dependencies are list
 
 ### With PIP
 ```bash
-git clone https://github.com/your-username/PhenoDAE-Phenotype_Imputation_Software.git
+git clone https://github.com/Jin-Hongyu/PhenoDAE-Phenotype_Imputation_Software.git
 cd PhenoDAE-Phenotype_Imputation_Software
 pip install -r requirements.txt
 ```
 
 ### With Conda
 ```bash
-git clone https://github.com/your-username/PhenoDAE-Phenotype_Imputation_Software.git
+git clone https://github.com/Jin-Hongyu/PhenoDAE-Phenotype_Imputation_Software.git
 cd PhenoDAE-Phenotype_Imputation_Software
 
 conda create -n PhenoDAE python=3.9
