@@ -406,14 +406,14 @@ if not args.impute_using_saved:
 
                     sind = CONT_BINARY_SPLIT
 
-                    l_cont = torch.zeros(1)
+                    l_cont = torch.zeros(1, device=args.device)
                     if len(contin_features) != 0:
                         l_cont = cont_crit(
                             (yhat * score_inds)[:, :sind],
                             (datarow * score_inds)[:, :sind]
                         )
 
-                    l_binary = torch.zeros(1)
+                    l_binary = torch.zeros(1, device=args.device)
                     if len(binary_features) != 0:
                         # Reversing the normalization process yields the original 0/1 values
                         original_binary = (datarow[:, sind:] * std_tensor[sind:] + mean_tensor[sind:])
