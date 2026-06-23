@@ -3,7 +3,7 @@ PhenoDAE is a noise‑robust phenotype imputation framework that learns stable l
 
 ## Overview of the PhenoDAE framework for phenotype imputation
 
-
+![Overview of the PhenoDAE framework for phenotype imputation](images/Overview of the PhenoDAE framework for phenotype imputation.jpg)
 
 ## Getting Started
 
