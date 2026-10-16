@@ -42,9 +42,9 @@ Use the following command to train a denoising autoencoder on your phenotype mat
 ```bash
 python PhenoDAE.py /path/to/your_data.csv \
     --id_name ID \
-    --copymask_amount 0.1 \
+    --copymask_amount 0.5 \
     --batch_size 2048 \
-    --epochs 10000 \
+    --epochs 200 \
     --lr 0.1 \
     --device cpu:0 \
     --dae_noise 0.10 \
@@ -66,7 +66,7 @@ During training, the script saves the model every time the validation loss impro
 **Example – train:**
 
 ```
-python PhenoDAE.py /Demo_data_shrimp_masked20%.csv --id_name ID --copymask_amount 0.1 --batch_size 2048 --epochs 10000 --lr 0.1 --device cpu:0 --dae_noise 0.10 --dae_noise_std 0.3
+python PhenoDAE.py /Demo_data_shrimp_masked20%.csv --id_name ID --copymask_amount 0.5 --batch_size 2048 --epochs 200 --lr 0.1 --device cpu:0 --dae_noise 0.10 --dae_noise_std 0.3
 ```
 
 output:
