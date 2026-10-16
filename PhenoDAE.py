@@ -173,7 +173,7 @@ parser.add_argument('--save_model_path', type=str, default=None,
                    help='Path to save model weights; default: {data_dir}/{original filename}.pth')
 
 # Training arguments
-parser.add_argument('--copymask_amount', type=float, default=0.5,
+parser.add_argument('--copymask_amount', type=float, default=0.3,
                    help='Probability of applying a copy mask to a sample (recommended 10%%~50%%)')
 # Additional noise parameters for PhenoDAE
 parser.add_argument('--dae_noise', type=float, default=0.1,
