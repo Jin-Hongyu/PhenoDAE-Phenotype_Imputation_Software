@@ -1,3 +1,32 @@
+# ============================================================
+# PhenoDAE major-revision implementation — 2026-10-06
+#
+# Additional revision fixes:
+# 1. Dedicated DataLoader shuffle RNG.
+# 2. Binary sigmoid predictions retained on probability scale.
+#
+# Previous 2026-10-05 fixes are retained:
+# - exact explicit output/model paths;
+# - scalar mean validation-loss checkpoint selection;
+# - original-scale 0/1 binary BCE targets.
+#
+# DAE architecture and Gaussian-noise mechanism are unchanged.
+# ============================================================
+
+# ============================================================
+# PhenoDAE version 2026-10-05
+#
+# Changes:
+#   1. Explicit --output paths are now respected exactly.
+#   2. Explicit --save_model_path paths are respected exactly.
+#   3. Seed/bootstrap suffixes are appended only to automatically
+#      generated default output paths.
+#   4. Fixed argparse help formatting for literal percent signs.
+#
+# These changes affect file naming / CLI behavior only and do not
+# change the PhenoDAE model architecture or training algorithm.
+# ============================================================
+
 #%% [Module imports]
 import torch
 import torch.nn as nn
@@ -144,8 +173,8 @@ parser.add_argument('--save_model_path', type=str, default=None,
                    help='Path to save model weights; default: {data_dir}/{original filename}.pth')
 
 # Training arguments
-parser.add_argument('--copymask_amount', type=float, default=0.3,
-                   help='Probability of applying a copy mask to a sample (recommended 10%~50%)')
+parser.add_argument('--copymask_amount', type=float, default=0.5,
+                   help='Probability of applying a copy mask to a sample (recommended 10%%~50%%)')
 # Additional noise parameters for PhenoDAE
 parser.add_argument('--dae_noise', type=float, default=0.1,
                    help='Extra noise ratio / corruption probability for PhenoDAE (recommended 0.1-0.2)')
@@ -218,26 +247,33 @@ fparts = args.data_file.split('/')
 save_folder = '/'.join(fparts[:-1]) + '/'
 filename = args.data_file.split('/')[-1].replace('.csv', '')
 
-save_model_path = save_folder + filename
+# ------------------------------------------------------------
+# Output path handling
+#
+# Explicit --output and --save_model_path are treated as exact
+# user-specified paths. Seed/bootstrap suffixes are appended only
+# when the corresponding default output path is generated.
+# ------------------------------------------------------------
 
 if args.output:
     save_table_name = args.output
 else:
     save_table_name = save_folder + f'imputed_{filename}'
-
-if args.seed != -1:
-    save_table_name += f'_seed{args.seed}'
-    save_model_path += f'_seed{args.seed}'
-if args.bootstrap:
-    save_table_name += f'_bootstrap'
-    save_model_path += f'_bootstrap'
-
-save_model_path += '.pth'
-if not args.output:
+    if args.seed != -1:
+        save_table_name += f'_seed{args.seed}'
+    if args.bootstrap:
+        save_table_name += '_bootstrap'
     save_table_name += '.csv'
 
 if args.save_model_path is not None:
     save_model_path = args.save_model_path
+else:
+    save_model_path = save_folder + filename
+    if args.seed != -1:
+        save_model_path += f'_seed{args.seed}'
+    if args.bootstrap:
+        save_model_path += '_bootstrap'
+    save_model_path += '.pth'
 
 if not args.impute_using_saved:
     print('Model will be saved to:', save_model_path)
@@ -295,6 +331,13 @@ normd_dsets = {
 }
 
 #%% [Create data loaders]
+# Dedicated RNG for DataLoader shuffling.
+# This prevents Gaussian-noise RNG consumption from changing
+# the training-sample order.
+shuffle_generator = torch.Generator()
+shuffle_seed = args.seed if args.seed != -1 else 20261006
+shuffle_generator.manual_seed(shuffle_seed)
+
 dataloaders = {}
 for split, mat in normd_dsets.items():
     dataset = CopymaskDataset(
@@ -306,6 +349,7 @@ for split, mat in normd_dsets.items():
         dataset,
         batch_size=args.batch_size,
         shuffle=(split == 'train'),
+        generator=(shuffle_generator if split == 'train' else None),
         num_workers=0
     )
 
@@ -466,12 +510,10 @@ if not args.impute_using_saved:
             torch.save(core, save_model_path)
             print('Model saved')
 
-        if ep > 50:
-            loss_1 = current_loss
-            loss_50 = np.mean(hist['val'][-50])
-            if loss_1 > loss_50 * 2:
-                print(f'Early stopping triggered: {loss_1} > {loss_50}×2')
-                break
+        # No ad-hoc early stopping is applied in the major-revision
+        # benchmark. Training is allowed to proceed to the common
+        # maximum epoch budget; the checkpoint with the minimum mean
+        # internal validation loss is used for imputation.
 
         if np.isnan(np.mean(hist['val'][-1])):
             print('NaN detected in training, exiting...')
@@ -546,7 +588,17 @@ if args.impute_data_file or args.save_imputed or args.quality:
         print(f'\rImputation progress: {bi}/{len(dset)}', end='')
 
     pmat = np.concatenate(preds_ls)
-    pmat = pmat * train_stats['std'] + train_stats['mean']
+
+    # Continuous outputs are predicted on the standardized scale.
+    if CONT_BINARY_SPLIT > 0:
+        pmat[:, :CONT_BINARY_SPLIT] = (
+            pmat[:, :CONT_BINARY_SPLIT]
+            * train_stats['std'][:CONT_BINARY_SPLIT]
+            + train_stats['mean'][:CONT_BINARY_SPLIT]
+        )
+
+    # Binary outputs have already passed through sigmoid and remain
+    # probabilities on the original [0, 1] scale.
     print()
 
 #%% [Imputation quality evaluation]
