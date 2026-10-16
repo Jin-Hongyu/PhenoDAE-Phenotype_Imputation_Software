@@ -54,7 +54,7 @@ python PhenoDAE.py /path/to/your_data.csv \
 **Key parameters:**
 - **`data_file` (positional argument):** path to the CSV file containing the phenotype matrix.
 - `--id_name`: name of the ID column.
-- `--copymask_amount`: fraction of samples for which a copy-mask is applied (0 to 1). Helps prevent overfitting. Default: `0.5`.
+- `--copymask_amount`: fraction of samples for which a copy-mask is applied (0 to 1). Helps prevent overfitting. Default: `0.3`.
 - `--dae_noise`: fraction of non‑missing values to which Gaussian noise is added during training (denoising). Default: `0.1`.
 - `--dae_noise_std`: standard deviation of the injected Gaussian noise (applied after standardization). Default: `0.3`.
 - `--batch_size`, `--epochs`, `--lr`: training hyperparameters.
