@@ -243,9 +243,11 @@ if args.multiple != -1:
     exit()
 
 #%% [File path configuration]
-fparts = args.data_file.split('/')
-save_folder = '/'.join(fparts[:-1]) + '/'
-filename = args.data_file.split('/')[-1].replace('.csv', '')
+from pathlib import Path
+
+input_path = Path(args.data_file).resolve()
+save_folder = str(input_path.parent) + '/'
+filename = input_path.stem
 
 # ------------------------------------------------------------
 # Output path handling
