@@ -236,7 +236,7 @@ if args.multiple != -1:
 
     with open('multiple_imputation.sh', 'w') as fl:
         commands = [
-            'python fit.py ' + ' '.join(configs) + f' --seed {m} --bootstrap --save_imputed'
+            'python PhenoDAE.py ' + ' '.join(configs) + f' --seed {m} --bootstrap --save_imputed'
             for m in range(args.multiple)
         ]
         fl.write('\n'.join(commands))
